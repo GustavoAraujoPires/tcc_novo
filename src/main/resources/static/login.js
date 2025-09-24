@@ -1,61 +1,42 @@
-document.getElementById('loginForm').addEventListener('submit', function(e) {
+document.getElementById('loginForm').addEventListener('submit', async function(e) {
     e.preventDefault();
 
-    const emailInput = document.getElementById('email');
-    const passwordInput = document.getElementById('password');
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value.trim();
 
-    const email = emailInput.value.trim();
-    const password = passwordInput.value.trim();
+    // limpa erros anteriores
+    document.querySelectorAll('.error-message').forEach(el => el.remove());
 
-    // Limpa mensagens de erro anteriores
-    const errorElements = document.querySelectorAll('.error-message');
-    errorElements.forEach(el => el.textContent = '');
-
-    let valid = true;
-
-    // Verifica email
-    if (!email) {
-        showError(emailInput, "O email é obrigatório.");
-        valid = false;
-    } else if (!validateEmail(email)) {
-        showError(emailInput, "Email inválido.");
-        valid = false;
+    if (!email || !password) {
+        if (!email) showError(document.getElementById('email'), "O email é obrigatório.");
+        if (!password) showError(document.getElementById('password'), "A senha é obrigatória.");
+        return;
     }
 
-    // Verifica senha
-    if (!password) {
-        showError(passwordInput, "A senha é obrigatória.");
-        valid = false;
-    } else if (password.length < 6) {
-        showError(passwordInput, "A senha deve ter pelo menos 6 caracteres.");
-        valid = false;
-    }
+    try {
+        const response = await fetch('http://localhost:8080/api/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
 
-    // Se tudo estiver correto, redireciona
-    if (valid) {
-        // Aqui você pode fazer a verificação real com backend ou localStorage
-        // Exemplo fictício de login correto:
-        if (email === "teste@exemplo.com" && password === "123456") {
+        const result = await response.json();
+
+        if (response.ok && result.success) {
             window.location.href = "home.html";
         } else {
-            alert("Email ou senha incorretos.");
+            alert(result.message || "Email ou senha incorretos.");
         }
+    } catch (err) {
+        console.error(err);
+        alert("Erro ao conectar ao servidor.");
     }
 });
 
-// Função para mostrar erro
 function showError(input, message) {
-    let errorElement = input.nextElementSibling;
-    if (!errorElement || !errorElement.classList.contains('error-message')) {
-        errorElement = document.createElement('div');
-        errorElement.classList.add('error-message');
-        input.parentNode.insertBefore(errorElement, input.nextSibling);
-    }
+    const errorElement = document.createElement('div');
+    errorElement.classList.add('error-message');
+    errorElement.style.color = 'red';
     errorElement.textContent = message;
-}
-
-// Função para validar email
-function validateEmail(email) {
-    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return re.test(email.toLowerCase());
+    input.parentNode.insertBefore(errorElement, input.nextSibling);
 }
