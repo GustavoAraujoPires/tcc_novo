@@ -1,9 +1,14 @@
 package com.TCC.Prato_Justo.Controller;
 
 import com.TCC.Prato_Justo.Model.Cadastro;
+import com.TCC.Prato_Justo.Model.LoginRequest;
 import com.TCC.Prato_Justo.Service.CadastroService;
 import jakarta.persistence.Table;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/auth")
@@ -30,4 +35,17 @@ public class AutchCadastroController {
         }
         return "Usuario ou senha ou email errada !!!!";
     }
+
+
+    @PostMapping("/login")
+    public ResponseEntity<Map<String, Object>> login(@RequestBody LoginRequest loginRequest){
+        boolean sucesso = cadastroService.autenticar(loginRequest.getEmail(), loginRequest.getPassword());
+        if(sucesso){
+            return ResponseEntity.ok(Map.of("success", true));
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("success", false, "message", "Email ou senha incorretos"));
+        }
+    }
+
 }
